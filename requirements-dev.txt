@@ -4,22 +4,44 @@
 #
 #    pip-compile requirements-dev.in
 #
-astroid==2.2.5            # via pylint
-certifi==2019.6.16        # via requests
-chardet==3.0.4            # via requests
-click==7.0
-future==0.17.1            # via utilkit
-idna==2.8                 # via requests
-isort==4.3.21             # via pylint
-lazy-object-proxy==1.4.1  # via astroid
-mccabe==0.6.1             # via pylint
+astroid==2.5.1
+    # via pylint
+certifi==2020.12.5
+    # via requests
+chardet==4.0.0
+    # via requests
+click==7.1.2
+    # via -r requirements.in
+future==0.18.2
+    # via utilkit
+greenlet==1.0.0
+    # via sqlalchemy
+idna==2.10
+    # via requests
+isort==5.8.0
+    # via pylint
+lazy-object-proxy==1.6.0
+    # via astroid
+mccabe==0.6.1
+    # via pylint
 pocket==0.3.6
-pylint==2.3.1
-pytz==2019.1              # via utilkit
-requests==2.22.0
-six==1.12.0               # via astroid
-sqlalchemy==1.3.5
-typed-ast==1.4.0          # via astroid
-urllib3==1.25.3           # via requests
+    # via -r requirements.in
+pylint==2.7.2
+    # via -r requirements-dev.in
+pytz==2021.1
+    # via utilkit
+requests==2.25.1
+    # via
+    #   -r requirements.in
+    #   pocket
+    #   utilkit
+sqlalchemy==1.4.2
+    # via -r requirements.in
+toml==0.10.2
+    # via pylint
+urllib3==1.26.4
+    # via requests
 utilkit==0.4.1
-wrapt==1.11.2             # via astroid
+    # via -r requirements.in
+wrapt==1.12.1
+    # via astroid
