@@ -6,6 +6,10 @@ if [[ -z "$VIRTUAL_ENV" ]]; then
     workon pocketstats
 fi
 
+# cd to the project dir so the script can find everything it needs
+SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+cd "${SCRIPTDIR}"
+
 if [ ! -f pocketstats.db ]; then
     python pocketstats.py createdb
 fi
