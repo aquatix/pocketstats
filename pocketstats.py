@@ -470,10 +470,11 @@ def updatestats():
 
     debug_print(report.pretty_print())
 
+    total_unread = nr_unread(session)
     if report.net_result > 0:
         debug_print('More items added than read or deleted')
     elif report.net_result == 0:
-        debug_print('Stagnating')
+        debug_print(f'Stagnating, {total_unread} items left to read')
     else:
         # Calculate number of days it will take to finish the backlog at this rate
         #timedelta
@@ -484,7 +485,6 @@ def updatestats():
         hours = int(days.total_seconds()//3600)
         items_read = report.net_result * -1
         items_per_hour = float(items_read) / hours
-        total_unread = nr_unread(session)
         debug_print('\nHours: {}, days: {}, items per hour: {} \n'.format(hours, days.days, items_per_hour))
         debug_print('\nAt this rate of ' + str(items_read) + ' per ' + str(hours) + ' hours it takes ' + str(round(float(total_unread) / (items_per_hour * 24.0), 1)) + ' days to read the ' + str(total_unread) + ' remaining items')
 
