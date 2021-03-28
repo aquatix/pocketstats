@@ -236,9 +236,8 @@ def get_last_update():
     """
     session = get_db_connection()
     try:
-        time_since_unix, report_id = session.query(Report.time_since_unix, Report.id).order_by(desc(Report.time_since))[0]
-        #return mktime(time_since.timetuple())
-        return time_since_unix
+        time_since, time_since_unix, report_id = session.query(Report.time_since, Report.time_since_unix, Report.id).order_by(desc(Report.time_since))[0]
+        return time_since, time_since_unix
     except IndexError:
         return None
 
@@ -271,7 +270,7 @@ def get_count(q):
 
 
 def nr_total(session):
-    return get_count(session.query(Article.id))
+    return len(session.query(Article).all())
 
 
 def nr_unread(session):
@@ -462,12 +461,12 @@ def updatestats():
     logger = get_logger()
     session = get_db_connection()
 
-    last_time = get_last_update()
-    debug_print('Previous update: ' + datetimeutil.unix_to_string(last_time))
+    last_time, last_time_unix = get_last_update()
+    debug_print(f'Previous update: {last_time}')
 
     previously_unread = nr_unread(session)
 
-    report = updatestats_since_last(logger, session, last_time)
+    report = updatestats_since_last(logger, session, last_time_unix)
 
     debug_print(report.pretty_print())
 
@@ -481,13 +480,12 @@ def updatestats():
         #days = last_time
         debug_print('Slowly but surely reading away your backlog')
 
-        last_datetime = datetimeutil.unix_to_python(last_time)
-        days = datetime.datetime.now() - last_datetime
-        hours = days.total_seconds()//3600.0
+        days = datetime.datetime.now() - last_time
+        hours = int(days.total_seconds()//3600)
         items_read = report.net_result * -1
         items_per_hour = float(items_read) / hours
         total_unread = nr_unread(session)
-        debug_print('\nHours: {}, days: {}, items per hour: {} \n'.format(hours, days, items_per_hour))
+        debug_print('\nHours: {}, days: {}, items per hour: {} \n'.format(hours, days.days, items_per_hour))
         debug_print('\nAt this rate of ' + str(items_read) + ' per ' + str(hours) + ' hours it takes ' + str(round(float(total_unread) / (items_per_hour * 24.0), 1)) + ' days to read the ' + str(total_unread) + ' remaining items')
 
     debug_print('\n' + get_read_progressbar(session))
