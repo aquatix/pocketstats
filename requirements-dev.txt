@@ -39,7 +39,7 @@ sqlalchemy==1.4.3
     # via -r requirements.in
 toml==0.10.2
     # via pylint
-urllib3==1.26.4
+urllib3==1.26.5
     # via requests
 utilkit==0.4.1
     # via -r requirements.in
