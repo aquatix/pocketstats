@@ -20,7 +20,7 @@ pocket==0.3.6
     # via -r requirements.in
 pytz==2022.6
     # via utilkit
-requests==2.28.1
+requests==2.31.0
     # via
     #   -r requirements.in
     #   pocket
