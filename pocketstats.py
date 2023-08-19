@@ -2,7 +2,6 @@ import datetime
 import json
 import logging
 import sys
-from time import mktime
 
 import click
 import pocket
@@ -37,9 +36,7 @@ def debug_print(string):
 
 
 def get_logger():
-    """
-    Create logging handler
-    """
+    """Create logging handler."""
     ## Create logger
     logger = logging.getLogger('pocketstats')
     logger.setLevel(logging.DEBUG)
@@ -55,9 +52,8 @@ def get_logger():
 
 
 class Article(Base):
-    """
-    An item in the Pocket archive; can also be an Image or Video
-    """
+    """An item in the Pocket archive; can also be an Image or Video."""
+
     __tablename__ = 'article'
 
     id = Column(Integer, primary_key=True)
@@ -122,9 +118,8 @@ class Article(Base):
 
 
 class Report(Base):
-    """
-    Changes since the last report; e.g., how many added, read, deleted, favourited
-    """
+    """Changes since the last report; e.g., how many added, read, deleted, favourited."""
+
     __tablename__ = 'report'
 
     id = Column(Integer, primary_key=True)
@@ -155,9 +150,7 @@ class Report(Base):
 
 
     def pretty_print(self):
-        """
-        Return a pretty overview of the report, usable for printing as import result
-        """
+        """Return a pretty overview of the report, usable for printing as import result."""
         data = [['update at', datetimeutil.datetime_to_string(self.time_updated)], ['total in response', str(self.total_response)], ['updated', str(self.nr_updated)], ['added', str(self.nr_added)], ['read', str(self.nr_read)], ['favourited', str(self.nr_favourited)], ['deleted', str(self.nr_deleted)], ['net result', str(self.net_result)]]
         result = ''
         col_width = max(len(word) for row in data for word in row) + 2  # padding
@@ -167,9 +160,7 @@ class Report(Base):
 
 
     def print_changed_articles(self, session):
-        """
-        Return a pretty overview of the articles that were added/read/etc
-        """
+        """Return a pretty overview of the articles that were added/read/etc."""
         changed_articles = json.loads(self.changed_articles)
         result = u''
         for changetype in changed_articles:
@@ -194,9 +185,7 @@ class Report(Base):
 
 
 def get_pocket_instance():
-    """
-    Connect to Pocket API
-    """
+    """Connect to Pocket API."""
     consumer_key = settings.consumer_key
     access_token = settings.access_token
 
@@ -205,9 +194,7 @@ def get_pocket_instance():
 
 
 def get_db_connection(get_engine=False):
-    """
-    Create a SQLAlchemy session
-    """
+    """Create a SQLAlchemy session."""
     #engine = create_engine('sqlite:///:memory:', echo=True)
     # Relative path:
     engine = create_engine('sqlite:///pocketstats.db')
@@ -230,8 +217,7 @@ def _create_tables():
 
 
 def get_last_update():
-    """
-    Return the timestamp of the last update from Pocket.
+    """Return the timestamp of the last update from Pocket.
     This will be used to filter the request of updates.
     """
     session = get_db_connection()
@@ -243,9 +229,7 @@ def get_last_update():
 
 
 def get_existing_item(session, item_id):
-    """
-    Returns the item with item_id if already in DB, otherwise None
-    """
+    """Returns the item with item_id if already in DB, otherwise None."""
     try:
         return session.query(Article).filter(Article.item_id == item_id)[0]
     except IndexError:
@@ -253,17 +237,13 @@ def get_existing_item(session, item_id):
 
 
 def get_random_unread(session, number=5):
-    """
-    Get a (small) list of random items that have not been read yet
-    """
+    """Get a (small) list of random items that have not been read yet."""
     #select.order_by(func.random()).limit(number)
     return session.query(Article.resolved_title, Article.resolved_url, Article.firstseen_time_updated).filter(Article.status == 0).order_by(func.random()).limit(number)[0:number]
 
 
 def get_count(q):
-    """
-    Fast count for column, avoiding a subquery
-    """
+    """Fast count for column, avoiding a subquery."""
     count_q = q.statement.with_only_columns([func.count()]).order_by(None)
     count = q.session.execute(count_q).scalar()
     return count
@@ -297,9 +277,7 @@ def get_read_progressbar(session):
 
 
 def updatestats_since_last(logger, session, last_time):
-    """
-    Get the changes since last time from the Pocket API
-    """
+    """Get the changes since last time from the Pocket API."""
     pocket_instance = get_pocket_instance()
     if last_time:
         items = pocket_instance.get(since=last_time, state='all', detailType='complete')
@@ -338,8 +316,6 @@ def updatestats_since_last(logger, session, last_time):
             article = existing_item
             logger.debug('Existing item found for ' + item_id)
 
-        if existing_item:
-            previous_status = existing_item.status
         # 0, 1, 2 - 1 if the item is archived - 2 if the item should be deleted
         article.status = item['status']
         try:
@@ -447,24 +423,20 @@ def updatestats_since_last(logger, session, last_time):
 ## Main program
 @click.group()
 def cli():
-    """
-    Pocket stats
-    """
+    """Pocket stats."""
     pass
 
 
 @cli.command()
 def updatestats():
-    """
-    Get the changes since last time from the Pocket API
-    """
+    """Get the changes since last time from the Pocket API."""
     logger = get_logger()
     session = get_db_connection()
 
     last_time, last_time_unix = get_last_update()
     debug_print(f'Previous update: {last_time}')
 
-    previously_unread = nr_unread(session)
+    nr_unread(session)
 
     report = updatestats_since_last(logger, session, last_time_unix)
 
@@ -496,18 +468,14 @@ def updatestats():
 
 @cli.command()
 def createdb():
-    """
-    Create the database
-    """
+    """Create the database."""
     _create_tables()
 
 
 @cli.command()
 @click.option('--consumer_key', prompt='Your Consumer Key', help='Get it at https://getpocket.com/developer/')
 def gettoken(consumer_key):
-    """
-    Get access token
-    """
+    """Get access token."""
     # URL to redirect user to, to authorize your app
     redirect_uri = 'https://github.com/aquatix/pocketstats'
     try:
@@ -531,9 +499,7 @@ def gettoken(consumer_key):
 
 @cli.command()
 def showstats():
-    """
-    Show statistics about the collection
-    """
+    """Show statistics about the collection."""
     # Size of progress-bar
     COLUMNS = 40
     result = []
@@ -580,7 +546,7 @@ def showstats():
     # List of number of items read, per date
     items_read = session.query(func.date(Article.time_read).label('thedate'), func.count(Article.id)).group_by('thedate')
     # firstseen_time_updated comes as close to 'time added' as we can get from the Pocket API
-    items_added = session.query(func.date(Article.firstseen_time_updated).label('thedate'), func.count(Article.id)).group_by('thedate')
+    session.query(func.date(Article.firstseen_time_updated).label('thedate'), func.count(Article.id)).group_by('thedate')
     #for item in items_added:
     #    print item
     # TODO: plot added-vs-read graph
@@ -618,9 +584,7 @@ def showprogressbar():
 
 @cli.command()
 def showreadlist():
-    """
-    List some unread items
-    """
+    """List some unread items."""
     session = get_db_connection()
     items = get_random_unread(session)
     for item in items:
