@@ -3,17 +3,15 @@ import json
 import logging
 import sys
 
+import __main__ as main
 import click
 import pocket
 from pocket import Pocket
 from sqlalchemy import (Column, DateTime, Integer, String, Text, create_engine,
                         desc, extract, func)
-#from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from utilkit import datetimeutil, printutil, stringutil
-
-import __main__ as main
 
 Base = declarative_base()
 
@@ -151,7 +149,16 @@ class Report(Base):
 
     def pretty_print(self):
         """Return a pretty overview of the report, usable for printing as import result."""
-        data = [['update at', datetimeutil.datetime_to_string(self.time_updated)], ['total in response', str(self.total_response)], ['updated', str(self.nr_updated)], ['added', str(self.nr_added)], ['read', str(self.nr_read)], ['favourited', str(self.nr_favourited)], ['deleted', str(self.nr_deleted)], ['net result', str(self.net_result)]]
+        data = [
+            ['update at', datetimeutil.datetime_to_string(self.time_updated)],
+            ['total in response', str(self.total_response)],
+            ['updated', str(self.nr_updated)],
+            ['added', str(self.nr_added)],
+            ['read', str(self.nr_read)],
+            ['favourited', str(self.nr_favourited)],
+            ['deleted', str(self.nr_deleted)],
+            ['net result', str(self.net_result)]
+        ]
         result = ''
         col_width = max(len(word) for row in data for word in row) + 2  # padding
         for row in data:
@@ -173,14 +180,17 @@ class Report(Base):
 
 
     def __str__(self):
+        """Return summary string representation of this Report."""
         return u'Update at ' + datetimeutil.datetime_to_string(self.time_updated) + '; total in response: ' + str(self.total_response) + ', nr_updated: ' + str(self.nr_updated) + ', nr_added: ' + str(self.nr_added) + ', nr_read: ' + str(self.nr_read) + ', nr_favourited: ' + str(self.nr_favourited) + ', nr_deleted: ' + str(self.nr_deleted)
 
 
     def __unicode__(self):
+        """Return summary string representation of this Report."""
         return self.__str__()
 
 
     def __repr__(self):
+        """Return summary string representation of this Report."""
         return self.__str__()
 
 
@@ -211,25 +221,28 @@ def _create_tables():
     #inspector = Inspector.from_engine(engine)
     #for table_name in inspector.get_table_names():
     #    print table_name
-    if (not engine.dialect.has_table(engine.connect(), "Article")) or (not engine.dialect.has_table(engine.connect(), "Report")):
+    if (
+        (not engine.dialect.has_table(engine.connect(), "Article"))
+        or (not engine.dialect.has_table(engine.connect(), "Report"))
+    ):
         # TODO: If Article and Report don't exist yet, create:
         Base.metadata.create_all(engine)
 
 
 def get_last_update():
-    """Return the timestamp of the last update from Pocket.
-    This will be used to filter the request of updates.
-    """
+    """Return the timestamp of the last update from Pocket. This will be used to filter the request of updates."""
     session = get_db_connection()
     try:
-        time_since, time_since_unix, report_id = session.query(Report.time_since, Report.time_since_unix, Report.id).order_by(desc(Report.time_since))[0]
+        time_since, time_since_unix, report_id = session.query(
+            Report.time_since, Report.time_since_unix, Report.id
+        ).order_by(desc(Report.time_since))[0]
         return time_since, time_since_unix
     except IndexError:
         return None
 
 
 def get_existing_item(session, item_id):
-    """Returns the item with item_id if already in DB, otherwise None."""
+    """Return the item with item_id if already in DB, otherwise None."""
     try:
         return session.query(Article).filter(Article.item_id == item_id)[0]
     except IndexError:
@@ -239,7 +252,9 @@ def get_existing_item(session, item_id):
 def get_random_unread(session, number=5):
     """Get a (small) list of random items that have not been read yet."""
     #select.order_by(func.random()).limit(number)
-    return session.query(Article.resolved_title, Article.resolved_url, Article.firstseen_time_updated).filter(Article.status == 0).order_by(func.random()).limit(number)[0:number]
+    return session.query(
+        Article.resolved_title, Article.resolved_url, Article.firstseen_time_updated
+    ).filter(Article.status == 0).order_by(func.random()).limit(number)[0:number]
 
 
 def get_count(q):
@@ -270,10 +285,11 @@ def nr_favourited(session):
 
 
 def get_read_progressbar(session):
+    """Generate a progress bar with the 'read' status of the archive."""
     COLUMNS = 40
     items_total = nr_total(session)
     items_read = nr_read(session)
-    return str(items_read) + '/' + str(items_total) + '  ' + printutil.progress_bar(items_total, items_read, COLUMNS, '.', '#', True)
+    return f'{items_read}/{items_total} ' + printutil.progress_bar(items_total, items_read, COLUMNS, '.', '#', True)
 
 
 def updatestats_since_last(logger, session, last_time):
@@ -435,8 +451,6 @@ def updatestats():
 
     last_time, last_time_unix = get_last_update()
     debug_print(f'Previous update: {last_time}')
-
-    nr_unread(session)
 
     report = updatestats_since_last(logger, session, last_time_unix)
 

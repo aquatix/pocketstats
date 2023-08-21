@@ -16,6 +16,8 @@ greenlet==2.0.2
     # via sqlalchemy
 idna==3.4
     # via requests
+isort==5.12.0
+    # via -r requirements-dev.in
 pocket==0.3.6
     # via -r requirements.in
 pytz==2023.3
