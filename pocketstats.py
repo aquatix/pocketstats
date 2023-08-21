@@ -1,3 +1,4 @@
+"""Create insight in your Pocket reading."""
 import datetime
 import json
 import logging
@@ -11,7 +12,7 @@ from sqlalchemy import (Column, DateTime, Integer, String, Text, create_engine,
                         desc, extract, func)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from utilkit import datetimeutil, printutil, stringutil
+from utilkit import datetimeutil, printutil
 
 Base = declarative_base()
 
@@ -29,6 +30,10 @@ except AttributeError:
 
 
 def debug_print(string):
+    """Only print to stdout when DEBUG is True.
+
+    :param str string: string containing the text to print
+    """
     if DEBUG:
         print(string)
 
@@ -101,18 +106,16 @@ class Article(Base):
     time_read = Column(DateTime)
 
     def get_tags(self):
+        """Return the tags for this Article."""
         result = []
         for tag in json.loads(self.tags):
             result.append(tag)
         return result
 
     def __str__(self):
+        """Readable representation of this Article."""
         #return u'[' + str(self.item_id) + '] ' + self.resolved_title + ' - ' + self.resolved_url
-        return u'[' + str(self.item_id) + '] ' + str(self.resolved_url)
-
-
-    def __unicode__(self):
-        return self.__str__()
+        return f'[{self.item_id}] {self.resolved_url}'
 
 
 class Report(Base):
@@ -144,6 +147,7 @@ class Report(Base):
 
     @property
     def net_result(self):
+        """Calculate the net result of the amount of articles added, read and deleted."""
         return self.nr_added - self.nr_read - self.nr_deleted
 
 
@@ -233,10 +237,13 @@ def get_last_update():
     """Return the timestamp of the last update from Pocket. This will be used to filter the request of updates."""
     session = get_db_connection()
     try:
-        time_since, time_since_unix, report_id = session.query(
-            Report.time_since, Report.time_since_unix, Report.id
+        time_updated, time_since, time_since_unix, report_id = session.query(
+            Report.time_updated,
+            Report.time_since,
+            Report.time_since_unix,
+            Report.id
         ).order_by(desc(Report.time_since))[0]
-        return time_since, time_since_unix
+        return time_updated, time_since, time_since_unix
     except IndexError:
         return None
 
@@ -360,7 +367,7 @@ def updatestats_since_last(logger, session, last_time):
         #if not existing_item and not 'resolved_id' in item:
         if 'resolved_id' not in item:
             # Item was added and immediately deleted, or at least before we saw it
-            logger.debug(stringutil.safe_unicode(item['status']) + ' ' + stringutil.safe_unicode(item['item_id']) + ' deleted')
+            logger.debug(f"{item['status']} {item['item_id']} deleted")
 
             article.item_id = item['item_id']
             article.firstseen_status = item['status']
@@ -375,7 +382,7 @@ def updatestats_since_last(logger, session, last_time):
             # Skip the rest of the loop
             continue
 
-        logger.debug(stringutil.safe_unicode(item['status']) + ' ' + stringutil.safe_unicode(item['item_id']) + ' ' + stringutil.safe_unicode(item['resolved_id']) + ' ' + datetimeutil.unix_to_string(item['time_added']) + ' ' + datetimeutil.unix_to_string(item['time_updated']) + ' ' + stringutil.safe_unicode(item['resolved_url']))
+        logger.debug(item['status'] + ' ' + item['item_id'] + ' ' + item['resolved_id'] + ' ' + datetimeutil.unix_to_string(item['time_added']) + ' ' + datetimeutil.unix_to_string(item['time_updated']) + ' ' + item['resolved_url'])
         article.resolved_id = item['resolved_id']
         article.sort_id = item['sort_id']
         article.given_url = item['given_url']
@@ -449,8 +456,8 @@ def updatestats():
     logger = get_logger()
     session = get_db_connection()
 
-    last_time, last_time_unix = get_last_update()
-    debug_print(f'Previous update: {last_time}')
+    last_time_updated, last_time, last_time_unix = get_last_update()
+    debug_print(f'Previous update: {last_time_updated}')
 
     report = updatestats_since_last(logger, session, last_time_unix)
 
@@ -467,7 +474,7 @@ def updatestats():
         #days = last_time
         debug_print('Slowly but surely reading away your backlog')
 
-        days = datetime.datetime.now() - last_time
+        days = datetime.datetime.now() - last_time_updated
         hours = int(days.total_seconds()//3600)
         items_read = report.net_result * -1
         items_per_hour = float(items_read) / hours
@@ -496,7 +503,8 @@ def gettoken(consumer_key):
         request_token = Pocket.get_request_token(consumer_key=consumer_key, redirect_uri=redirect_uri)
         auth_url = Pocket.get_auth_url(code=request_token, redirect_uri=redirect_uri)
     except pocket.RateLimitException as e:
-        # pocket.RateLimitException: User was authenticated, but access denied due to lack of permission or rate limiting. Invalid consumer key.
+        # pocket.RateLimitException: User was authenticated, but access denied due to lack of permission or rate
+        # limiting. In our case, likely an invalid consumer key.
         print("Failed to get an access token, likely due to an invalid consumer key")
         print("Go to https://getpocket.com/developer/ and generate a key there")
         print()
