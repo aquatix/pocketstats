@@ -475,11 +475,11 @@ def updatestats():
         debug_print('Slowly but surely reading away your backlog')
 
         days = datetime.datetime.now() - last_time_updated
-        hours = int(days.total_seconds()//3600)
+        hours = round(days.total_seconds()/3600)
         items_read = report.net_result * -1
         items_per_hour = float(items_read) / hours
-        debug_print('\nHours: {}, days: {}, items per hour: {} \n'.format(hours, days.days, items_per_hour))
-        debug_print('\nAt this rate of ' + str(items_read) + ' per ' + str(hours) + ' hours it takes ' + str(round(float(total_unread) / (items_per_hour * 24.0), 1)) + ' days to read the ' + str(total_unread) + ' remaining items')
+        debug_print(f'\nHours: {hours}, days: {days.days}, items per hour: {items_per_hour} \n')
+        debug_print(f'\nAt this rate of {items_read} per {hours} hours it takes {round(float(total_unread) / (items_per_hour * 24.0), 1)}  days to read the {total_unread} remaining items')
 
     debug_print('\n' + get_read_progressbar(session))
 
