@@ -465,7 +465,7 @@ def updatestats():
 
     total_unread = nr_unread(session)
     if report.net_result > 0:
-        debug_print('More items added than read or deleted')
+        debug_print(f'More items added than read or deleted, {total_unread} items left to read')
     elif report.net_result == 0:
         debug_print(f'Stagnating, {total_unread} items left to read')
     else:
