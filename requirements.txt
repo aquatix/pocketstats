@@ -25,7 +25,7 @@ sqlalchemy==2.0.31
     # via -r requirements.in
 typing-extensions==4.12.2
     # via sqlalchemy
-urllib3==2.2.2
+urllib3==2.5.0
     # via requests
 utilkit==0.4.1
     # via -r requirements.in
