@@ -1,5 +1,7 @@
 # pocketstats
 
+IMPORTANT: As of the 8th of July 2025, [Pocket has shut down](https://support.mozilla.org/en-US/kb/future-of-pocket), so this project is defunct too :(
+
 Statistics of your [Pocket](https://getpocket.com) usage: how many are still unread, how many have you favourited, are deleted and are archived?
 
 [![Code Health](https://landscape.io/github/aquatix/pocketstats/master/landscape.svg?style=flat)](https://landscape.io/github/aquatix/pocketstats/master)
